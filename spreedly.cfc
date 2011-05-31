@@ -94,56 +94,56 @@
     
     <cftry>
         
-    <cfhttp url="https://spreedly.com/api/v4/#variables.site#/#arguments.path#.xml" method="#arguments.method#" username="#variables.token#" password="#variables.password#">
-      <cfhttpparam type="header" name="Content-Type" value="application/xml" />
-      <cfif arguments.method EQ "GET">
-        <!--- Spreedly doesnt use GET variables in their API, so this is not used --->
-        <cfloop collection=#arguments# item="param">
-          <cfhttpparam type="URL" name="#LCase(param)#" value="#StructFind(arguments, param)#">
-        </cfloop>
-      <cfelseif arguments.method NEQ "GET">
-        <!--- any Struct passed in as the "obj" argument will get converted to XML and submitted as the body of the HTTP request --->
-        <!--- an argument named "root" must also be passed in to indicate the root node name for the XML conversion --->
-        <cfset xmlString = toXML(arguments.obj,arguments.root)>
-        <cfhttpparam type="Body" value="#xmlString#">
-      </cfif>
-    </cfhttp>
+      <cfhttp url="https://spreedly.com/api/v4/#variables.site#/#arguments.path#.xml" method="#arguments.method#" username="#variables.token#" password="#variables.password#">
+        <cfhttpparam type="header" name="Content-Type" value="application/xml" />
+        <cfif arguments.method EQ "GET">
+          <!--- Spreedly doesnt use GET variables in their API, so this is not used --->
+          <cfloop collection=#arguments# item="param">
+            <cfhttpparam type="URL" name="#LCase(param)#" value="#StructFind(arguments, param)#">
+          </cfloop>
+        <cfelseif arguments.method NEQ "GET">
+          <!--- any Struct passed in as the "obj" argument will get converted to XML and submitted as the body of the HTTP request --->
+          <!--- an argument named "root" must also be passed in to indicate the root node name for the XML conversion --->
+          <cfset xmlString = toXML(arguments.obj,arguments.root)>
+          <cfhttpparam type="Body" value="#xmlString#">
+        </cfif>
+      </cfhttp>
         
-    <cfswitch expression="#ListFirst(cfhttp.statusCode, " ")#">
-      <cfcase value="500">
-        <!--- 500 INTERNAL SERVER ERROR --->
-        <cfreturn {"error":"500"}>
-      </cfcase>
-      <cfcase value="422">
-        <!--- 422 UNPROCESSABLE ENTITY   Sent in response to a POST (create) or PUT (update) request that is invalid. --->
-        <cfreturn {"error":"422"}>
-      </cfcase>
-      <cfcase value="404">
-        <!--- 404 NOT FOUND  The requested resource was not found. --->
-        <cfreturn {"error":"404"}>
-      </cfcase>
-      <cfcase value="403">
-        <!--- 403 FORBIDDEN  Returned by valid endpoints in our application that have not been enabled for API use. --->
-        <cfreturn {"error":"403"}>
-      </cfcase>
-      <cfcase value="401">
-        <!--- 401 UNAUTHORIZED Returned when API authentication has failed. --->
-        <cfreturn {"error":"401"}>
-      </cfcase>
-      <cfcase value="201">
-        <!--- 201 CREATED The resource was successfully created. Sent in response to a POST (create) request with valid data. --->
-      </cfcase>
-      <cfcase value="200">
-        <!--- 200 OK The request succeeded and a response was sent. Usually in response to a GET (read) request, but also for successful PUT (update) requests.--->
-      </cfcase>
-      <cfdefaultcase>
-        <!--- ???? --->
-      </cfdefaultcase>
-    </cfswitch>
+      <cfswitch expression="#ListFirst(cfhttp.statusCode, " ")#">
+        <cfcase value="500">
+          <!--- 500 INTERNAL SERVER ERROR --->
+          <cfreturn {"error":"500"}>
+        </cfcase>
+        <cfcase value="422">
+          <!--- 422 UNPROCESSABLE ENTITY   Sent in response to a POST (create) or PUT (update) request that is invalid. --->
+          <cfreturn {"error":"422"}>
+        </cfcase>
+        <cfcase value="404">
+          <!--- 404 NOT FOUND  The requested resource was not found. --->
+          <cfreturn {"error":"404"}>
+        </cfcase>
+        <cfcase value="403">
+          <!--- 403 FORBIDDEN  Returned by valid endpoints in our application that have not been enabled for API use. --->
+          <cfreturn {"error":"403"}>
+        </cfcase>
+        <cfcase value="401">
+          <!--- 401 UNAUTHORIZED Returned when API authentication has failed. --->
+          <cfreturn {"error":"401"}>
+        </cfcase>
+        <cfcase value="201">
+          <!--- 201 CREATED The resource was successfully created. Sent in response to a POST (create) request with valid data. --->
+        </cfcase>
+        <cfcase value="200">
+          <!--- 200 OK The request succeeded and a response was sent. Usually in response to a GET (read) request, but also for successful PUT (update) requests.--->
+        </cfcase>
+        <cfdefaultcase>
+          <!--- ???? --->
+        </cfdefaultcase>
+      </cfswitch>
     
-    <cfcatch>
-      <cfreturn {}>
-    </cfcatch>
+      <cfcatch>
+        <cfreturn {}>
+      </cfcatch>
 
     </cftry>
   
