@@ -14,3 +14,8 @@ This is a partial implementation of the Spreedly API for ColdFusion. Using this 
       // assign them a free trial plan
       SP.free_trial(id=person.id,data={"id":"7533"});
     </cfscript>
+    
+Notes
+---
+
+Has only been tested with Railo 3. Will probably work with CF8+ as well.
