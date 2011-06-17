@@ -1,9 +1,9 @@
 <cfcomponent hint="This is the Spreedly API. Structs in, structs out.">
   
   <cfscript>
-    variables.token = "your_spreedly_token";
-    variables.site = "your_spreedly_site_name";
-    variables.password = "X";
+    variables.token = "your-spreedly-api-token"; // find this by logging into spreedly, selecting your site and going to "configuration > site details > API Authentication Token"
+    variables.site = "your-spreedly-site-name"; // you set this up when you create your site in spreedly
+    variables.password = "x"; // spreedly does not actually use this password
   </cfscript>
   
   <!---
@@ -91,14 +91,22 @@
 
   <cffunction name="_request" access="private">
     <cfargument name="path">
+	<cfset var objSecurity= "" />
+	<cfset var storeProvider = "" />
     
     <cftry>
+		
+	   <!--- added because of ColdFusion bug referenced here: http://www.coldfusionjedi.com/index.cfm/2011/1/12/Diagnosing-a-CFHTTP-issue--peer-not-authenticated and here http://cfbugs.adobe.com/cfbugreport/flexbugui/cfbugtracker/main.html#bugId=85815--->
+	   <cfset objSecurity = createObject("java", "java.security.Security") />
+       <cfset storeProvider = objSecurity.getProvider("JsafeJCE") />
+       <cfset objSecurity.removeProvider("JsafeJCE") />
+	   <!--- end add --->
         
       <cfhttp url="https://spreedly.com/api/v4/#variables.site#/#arguments.path#.xml" method="#arguments.method#" username="#variables.token#" password="#variables.password#">
         <cfhttpparam type="header" name="Content-Type" value="application/xml" />
         <cfif arguments.method EQ "GET">
           <!--- Spreedly doesnt use GET variables in their API, so this is not used --->
-          <cfloop collection=#arguments# item="param">
+          <cfloop collection="#arguments#" item="param">
             <cfhttpparam type="URL" name="#LCase(param)#" value="#StructFind(arguments, param)#">
           </cfloop>
         <cfelseif arguments.method NEQ "GET">
@@ -108,27 +116,31 @@
           <cfhttpparam type="Body" value="#xmlString#">
         </cfif>
       </cfhttp>
+	
+	  <!--- also added for ColdFusion bug referenced above --->
+      <cfset objSecurity.insertProviderAt(storeProvider, 1) />
+	  <!--- end add --->
         
       <cfswitch expression="#ListFirst(cfhttp.statusCode, " ")#">
         <cfcase value="500">
           <!--- 500 INTERNAL SERVER ERROR --->
-          <cfreturn {"error":"500"}>
+          <cfreturn {"error" = "500"}>
         </cfcase>
         <cfcase value="422">
           <!--- 422 UNPROCESSABLE ENTITY   Sent in response to a POST (create) or PUT (update) request that is invalid. --->
-          <cfreturn {"error":"422"}>
+          <cfreturn {"error" = "422"}>
         </cfcase>
         <cfcase value="404">
           <!--- 404 NOT FOUND  The requested resource was not found. --->
-          <cfreturn {"error":"404"}>
+          <cfreturn {"error" = "404"}>
         </cfcase>
         <cfcase value="403">
           <!--- 403 FORBIDDEN  Returned by valid endpoints in our application that have not been enabled for API use. --->
-          <cfreturn {"error":"403"}>
+          <cfreturn {"error" = "403"}>
         </cfcase>
         <cfcase value="401">
           <!--- 401 UNAUTHORIZED Returned when API authentication has failed. --->
-          <cfreturn {"error":"401"}>
+          <cfreturn {"error" = "401"}>
         </cfcase>
         <cfcase value="201">
           <!--- 201 CREATED The resource was successfully created. Sent in response to a POST (create) request with valid data. --->
@@ -173,7 +185,7 @@
     return "https://spreedly.com/#variables.site#/subscriber_accounts/#arguments.token#";
   }
   
-  // Get a subscriber’s details
+  // Get a subscriberâ€™s details
   // GET /api/v4/[short site name]/subscribers/[customer_id].xml
   // required: id
   function detail() {
@@ -281,7 +293,17 @@
 
   // Create an Invoice
   // POST /api/v4/[short site name]/invoices.xml
-
+  // required: customer-id, screen-name, email
+  function create_invoice() {
+    // *** NOT READY, toXml method may need to be updated to support nested structs 
+    return _request(
+      path="invoices",
+      method="POST",
+      obj=arguments.data,
+      root="invoice"      
+    );
+  }
+ 
   // Pay an Invoice
   // PUT /api/v4/[short site name]/invoices/[invoice token]/pay.xml
 
